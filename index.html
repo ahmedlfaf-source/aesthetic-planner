@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Born to Fly - Felt Aesthetic Planner</title>
+    <!-- مكتبة تصدير الـ PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* الثيمات اللونية (أزرق، برتقالي، أخضر) */
+        :root {
+            --app-bg: #2256ef; /* الثيم الأزرق الأساسي */
+            --card-bg: #fffbf0;
+            --primary-text: #3d3a37;
+            --stitch-border: #b8a690;
+            --accent-color: #3b71ca;
+        }
+
+        body.theme-orange {
+            --app-bg: #d96b27;
+            --accent-color: #d96b27;
+        }
+
+        body.theme-forest {
+            --app-bg: #344e41;
+            --accent-color: #588157;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--app-bg);
+            color: var(--primary-text);
+            margin: 0;
+            padding: 10px 10px 70px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease;
+        }
+
+        /* شريط التبديل بين الثيمات والصفحات */
+        .controls-bar {
+            display: flex;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.25);
+            padding: 6px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            max-width: 480px;
+            width: 100%;
+            box-sizing: border-box;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab, .theme-btn {
+            background: #fff;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: var(--primary-text);
+            transition: all 0.2s;
+        }
+
+        .nav-tab.active {
+            background: #f5bc42;
+            color: white;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 4px;
+        }
+
+        /* حاوية البلانر الأساسية */
+        .planner-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--card-bg);
+            border: 3px dashed var(--stitch-border);
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            box-sizing: border-box;
+            display: none;
+        }
+
+        .planner-container.active-page {
+            display: block;
+        }
+
+        /* الهيدر بستايل الجوخ */
+        header {
+            text-align: center;
+            padding: 18px 10px;
+            margin-bottom: 12px;
+            border-bottom: 2px dashed #e2d2be;
+            border-radius: 14px;
+            background: #fff6e8;
+            border: 2px dashed #d5c3aa;
+        }
+
+        .felt-title {
+            display: inline-block;
+            background: linear-gradient(135deg, #f5bc42, #e59838);
+            color: white;
+            padding: 6px 20px;
+            border-radius: 12px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(245, 188, 66, 0.4);
+            border: 2px solid #fff;
+            margin-bottom: 4px;
+        }
+
+        .felt-subtitle {
+            font-size: 0.8rem;
+            color: #73695c;
+            font-weight: bold;
+            margin-top: 4px;
+            margin-bottom: 8px;
+        }
+
+        .planner-title {
+            display: inline-block;
+            background: #fff;
+            color: var(--accent-color);
+            padding: 4px 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: 2px dashed #b8a690;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* شريط التقدم التفاعلي */
+        .progress-container {
+            background: #eee;
+            border-radius: 10px;
+            height: 10px;
+            width: 100%;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid #d5c3aa;
+        }
+
+        .progress-bar {
+            background: var(--accent-color);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* الأقسام الداخلية */
+        .section {
+            background: #ffffff;
+            border: 2px dashed #d5c3aa;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .section h3 {
+            margin-top: 0;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: #4c463f;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 4px;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            border: 1px solid #d5c3aa;
+            border-radius: 8px;
+            padding: 6px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 0.8rem;
+            background: #fffefb;
+            color: var(--primary-text);
+            outline: none;
+            resize: none;
+        }
+
+        textarea { height: 50px; }
+
+        .input-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .input-row button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        ul.dynamic-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        ul.dynamic-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed #f0e6d6;
+            font-size: 0.8rem;
+        }
+
+        ul.dynamic-list li.completed span {
+            text-decoration: line-through;
+            color: #a89f91;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #d90429;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        /* زر التصدير السفلي */
+        .footer-action {
+            width: 100%;
+            max-width: 480px;
+            position: fixed;
+            bottom: 10px;
+            display: flex;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        #export-pdf-btn {
+            flex: 1;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="theme-default">
+
+    <!-- شريط التحكم والتبويبات -->
+    <div class="controls-bar">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchPage('page-daily')">اليومي</button>
+            <button class="nav-tab" onclick="switchPage('page-habits')">العادات</button>
+            <button class="nav-tab" onclick="switchPage('page-goals')">الأهداف</button>
+            <button class="nav-tab" onclick="switchPage('page-gratitude')">الامتنان</button>
+        </div>
+        <div class="theme-selector">
+            <button class="theme-btn" onclick="setTheme('')" style="background:#2256ef; color:#fff;">أزرق</button>
+            <button class="theme-btn" onclick="setTheme('theme-orange')" style="background:#d96b27; color:#fff;">برتقالي</button>
+            <button class="theme-btn" onclick="setTheme('theme-forest')" style="background:#344e41; color:#fff;">أخضر</button>
+        </div>
+    </div>
+
+    <!-- 1. صفحة البلانر اليومي -->
+    <div class="planner-container active-page" id="page-daily">
+        <header>
+            <div class="felt-title">Born to Fly</div>
+            <div class="felt-subtitle">✨ حلق نحو أحلامك بكل شغف</div>
+            <div><span class="planner-title">DAILY PLANNER</span></div>
+        </header>
+
+        <!-- شريط التقدم التفاعلي -->
+        <div class="section">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px;">
+                <span>نسبة الإنجاز اليومي</span>
+                <span id="progress-text">0%</span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📌 أهم الأولويات</h3>
+            <textarea id="daily-priorities" placeholder="اكتب أهم المهام اليومية..."></textarea>
+        </div>
+        <div class="section">
+            <h3>📝 قائمة المهام (To-Do List)</h3>
+            <div class="input-row">
+                <input type="text" id="todo-input" placeholder="أضف مهمة جديدة...">
+                <button type="button" id="add-todo-btn">إضافة</button>
+            </div>
+            <ul class="dynamic-list" id="todo-list"></ul>
+        </div>
+    </div>
+
+    <!-- 2. صفحة متتبع العادات -->
+    <div class="planner-container" id="page-habits">
+        <header>
+            <div class="felt-title">Born to Fly</div>
+            <div class="felt-subtitle">🌱 عادات صغيرة تصنع فرقاً عظيماً</div>
+            <div><span class="planner-title">HABIT TRACKER</span></div>
+        </header>
+        <div class="section">
+            <h3>🌱 العادات اليومية</h3>
+            <div class="input-row">
+                <input type="text" id="habit-input" placeholder="أضف عادة جديدة...">
+                <button type="button" id="add-habit-btn">إضافة</button>
+            </div>
+            <ul class="dynamic-list" id="habit-list"></ul>
+        </div>
+    </div>
+
+    <!-- 3. صفحة الأهداف الشهرية -->
+    <div class="planner-container" id="page-goals">
+        <header>
+            <div class="felt-title">Born to Fly</div>
+            <div class="felt-subtitle">🎯 حدد طموحاتك وانطلق نحو القمة</div>
+            <div><span class="planner-title">MONTHLY GOALS</span></div>
+        </header>
+        <div class="section">
+            <h3>🎯 الهدف الرئيسي للشهر</h3>
+            <textarea id="monthly-main" placeholder="الإنجاز الأهم هذا الشهر..."></textarea>
+        </div>
+        <div class="section">
+            <h3>🚀 قائمة الأهداف</h3>
+            <div class="input-row">
+                <input type="text" id="goal-input" placeholder="أضف هدفاً جديداً...">
+                <button type="button" id="add-goal-btn">إضافة</button>
+            </div>
+            <ul class="dynamic-list" id="goal-list"></ul>
+        </div>
+    </div>
+
+    <!-- 4. صفحة الامتنان والرفاهية -->
+    <div class="planner-container" id="page-gratitude">
+        <header>
+            <div class="felt-title">Born to Fly</div>
+            <div class="felt-subtitle">💙 امتنّ واعتنِ بروحك اليومية</div>
+            <div><span class="planner-title">GRATITUDE & CARE</span></div>
+        </header>
+        <div class="section">
+            <h3>✨ أشياء أنا ممتن/ة لها</h3>
+            <div class="input-row">
+                <input type="text" id="grat-input" placeholder="أنا ممتن لـ...">
+                <button type="button" id="add-grat-btn">إضافة</button>
+            </div>
+            <ul class="dynamic-list" id="grat-list"></ul>
+        </div>
+    </div>
+
+    <!-- زر التصدير الموحد -->
+    <div class="footer-action">
+        <button id="export-pdf-btn" onclick="exportCurrentPagePDF()">تصدير الصفحة الحالية إلى PDF 📥</button>
+    </div>
+
+    <script>
+        // --- دالة التبديل بين الثيمات ---
+        function setTheme(themeName) {
+            document.body.className = themeName;
+            localStorage.setItem('planner_theme_fixed', themeName);
+        }
+        const savedTheme = localStorage.getItem('planner_theme_fixed') || '';
+        document.body.className = savedTheme;
+
+        // --- دالة التنقل بين التبويبات ---
+        let activePageId = 'page-daily';
+        function switchPage(pageId) {
+            document.querySelectorAll('.planner-container').forEach(el => el.classList.remove('active-page'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active-page');
+            event.target.classList.add('active');
+            activePageId = pageId;
+        }
+
+        // --- إدارة القوائم بشكل صحيح ومستقل ---
+        function createListManager(storageKey, inputId, listId, btnId, isTodoList = false) {
+            let items = JSON.parse(localStorage.getItem(storageKey)) || [];
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            const btn = document.getElementById(btnId);
+
+            function updateProgress() {
+                if (!isTodoList) return;
+                const total = items.length;
+                const completed = items.filter(i => i.completed).length;
+                const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+                document.getElementById('progress-bar').style.width = percent + '%';
+                document.getElementById('progress-text').textContent = percent + '%';
+            }
+
+            function render() {
+                list.innerHTML = '';
+                items.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    if (item.completed) li.classList.add('completed');
+                    li.innerHTML = `
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; flex: 1;">
+                            <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleItemStatus('${storageKey}', ${index})">
+                            <span>${item.text}</span>
+                        </label>
+                        <button type="button" class="delete-btn" onclick="deleteItemRecord('${storageKey}', ${index})">✕</button>
+                    `;
+                    list.appendChild(li);
+                });
+                localStorage.setItem(storageKey, JSON.stringify(items));
+                updateProgress();
+            }
+
+            function addItem() {
+                if (input.value.trim() !== '') {
+                    items.push({ text: input.value.trim(), completed: false });
+                    input.value = '';
+                    render();
+                }
+            }
+
+            btn.addEventListener('click', addItem);
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addItem();
+                }
+            });
+
+            render();
+        }
+
+        // تفعيل مدير القوائم لكل قسم على حدة
+        createListManager('todos_data_fix', 'todo-input', 'todo-list', 'add-todo-btn', true);
+        createListManager('habits_data_fix', 'habit-input', 'habit-list', 'add-habit-btn', false);
+        createListManager('goals_data_fix', 'goal-input', 'goal-list', 'add-goal-btn', false);
+        createListManager('grat_data_fix', 'grat-input', 'grat-list', 'add-grat-btn', false);
+
+        // دوال عامة للحذف والتعديل
+        window.toggleItemStatus = function(key, index) {
+            let items = JSON.parse(localStorage.getItem(key)) || [];
+            if (items[index]) {
+                items[index].completed = !items[index].completed;
+                localStorage.setItem(key, JSON.stringify(items));
+                location.reload();
+            }
+        }
+
+        window.deleteItemRecord = function(key, index) {
+            let items = JSON.parse(localStorage.getItem(key)) || [];
+            items.splice(index, 1);
+            localStorage.setItem(key, JSON.stringify(items));
+            location.reload();
+        }
+
+        // --- تصدير الصفحة الحالية إلى PDF ---
+        function exportCurrentPagePDF() {
+            const element = document.getElementById(activePageId);
+            const options = {
+                margin:       5,
+                filename:     `${activePageId}-BornToFly.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(options).save();
+        }
+
+        // حفظ مربعات النص العادية
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach((ta, index) => {
+            const key = `textarea_fix_${index}`;
+            ta.value = localStorage.getItem(key) || '';
+            ta.addEventListener('input', () => localStorage.setItem(key, ta.value));
+        });
+    </script>
+</body>
+</html>
